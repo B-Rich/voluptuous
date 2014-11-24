@@ -1,0 +1,970 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Voluptuous Module Reference &mdash; Voluptuous 0.8.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.8.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Voluptuous 0.8.6 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Voluptuous 0.8.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-voluptuous">
+<span id="voluptuous-module-reference"></span><h1>Voluptuous Module Reference<a class="headerlink" href="#module-voluptuous" title="Permalink to this headline">¶</a></h1>
+<p>Schema validation for Python data structures.</p>
+<p>Given eg. a nested data structure like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&#39;exclude&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Users&#39;</span><span class="p">,</span> <span class="s">&#39;Uptime&#39;</span><span class="p">],</span>
+    <span class="s">&#39;include&#39;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="s">&#39;set&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;snmp_community&#39;</span><span class="p">:</span> <span class="s">&#39;public&#39;</span><span class="p">,</span>
+        <span class="s">&#39;snmp_timeout&#39;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+        <span class="s">&#39;snmp_version&#39;</span><span class="p">:</span> <span class="s">&#39;2c&#39;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s">&#39;targets&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;localhost&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&#39;exclude&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Uptime&#39;</span><span class="p">],</span>
+            <span class="s">&#39;features&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&#39;Uptime&#39;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s">&#39;retries&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s">&#39;Users&#39;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s">&#39;snmp_community&#39;</span><span class="p">:</span> <span class="s">&#39;monkey&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;snmp_port&#39;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">},</span>
+            <span class="s">&#39;include&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Users&#39;</span><span class="p">],</span>
+            <span class="s">&#39;set&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&#39;snmp_community&#39;</span><span class="p">:</span> <span class="s">&#39;monkeys&#39;</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A schema like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>  <span class="s">&#39;snmp_community&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="gp">... </span>  <span class="s">&#39;retries&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>  <span class="s">&#39;snmp_version&#39;</span><span class="p">:</span> <span class="n">All</span><span class="p">(</span><span class="n">Coerce</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span> <span class="n">Any</span><span class="p">(</span><span class="s">&#39;3&#39;</span><span class="p">,</span> <span class="s">&#39;2c&#39;</span><span class="p">,</span> <span class="s">&#39;1&#39;</span><span class="p">)),</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Ping&#39;</span><span class="p">,</span> <span class="s">&#39;Uptime&#39;</span><span class="p">,</span> <span class="s">&#39;Http&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span>
+<span class="gp">... </span>   <span class="s">&#39;exclude&#39;</span><span class="p">:</span> <span class="n">features</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="s">&#39;include&#39;</span><span class="p">:</span> <span class="n">features</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="s">&#39;set&#39;</span><span class="p">:</span> <span class="n">settings</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="s">&#39;targets&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>     <span class="s">&#39;exclude&#39;</span><span class="p">:</span> <span class="n">features</span><span class="p">,</span>
+<span class="gp">... </span>     <span class="s">&#39;include&#39;</span><span class="p">:</span> <span class="n">features</span><span class="p">,</span>
+<span class="gp">... </span>     <span class="s">&#39;features&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>       <span class="nb">str</span><span class="p">:</span> <span class="n">settings</span><span class="p">,</span>
+<span class="gp">... </span>     <span class="p">},</span>
+<span class="gp">... </span>   <span class="p">},</span>
+<span class="gp">... </span><span class="p">})</span>
+</pre></div>
+</div>
+<p>Validate like so:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span>
+<span class="gp">... </span>  <span class="s">&#39;set&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s">&#39;snmp_community&#39;</span><span class="p">:</span> <span class="s">&#39;public&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">&#39;snmp_version&#39;</span><span class="p">:</span> <span class="s">&#39;2c&#39;</span><span class="p">,</span>
+<span class="gp">... </span>  <span class="p">},</span>
+<span class="gp">... </span>  <span class="s">&#39;targets&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s">&#39;exclude&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Ping&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="s">&#39;features&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>      <span class="s">&#39;Uptime&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;retries&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+<span class="gp">... </span>      <span class="s">&#39;Users&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;snmp_community&#39;</span><span class="p">:</span> <span class="s">&#39;monkey&#39;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="p">},</span>
+<span class="gp">... </span>  <span class="p">},</span>
+<span class="gp">... </span><span class="p">})</span> <span class="o">==</span> <span class="p">{</span>
+<span class="gp">... </span>  <span class="s">&#39;set&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;snmp_version&#39;</span><span class="p">:</span> <span class="s">&#39;2c&#39;</span><span class="p">,</span> <span class="s">&#39;snmp_community&#39;</span><span class="p">:</span> <span class="s">&#39;public&#39;</span><span class="p">},</span>
+<span class="gp">... </span>  <span class="s">&#39;targets&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s">&#39;exclude&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Ping&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="s">&#39;features&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;Uptime&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;retries&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+<span class="gp">... </span>                 <span class="s">&#39;Users&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;snmp_community&#39;</span><span class="p">:</span> <span class="s">&#39;monkey&#39;</span><span class="p">}}}}</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="voluptuous.All">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">All</tt><big>(</big><em>*validators</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#All"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.All" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value must pass all validators.</p>
+<p>The output of each validator is passed as input to the next.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>msg</strong> &#8211; Message to deliver to user if validation fails.</li>
+<li><strong>kwargs</strong> &#8211; All other keyword arguments are passed to the sub-Schema constructors.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">All</span><span class="p">(</span><span class="s">&#39;10&#39;</span><span class="p">,</span> <span class="n">Coerce</span><span class="p">(</span><span class="nb">int</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">(</span><span class="s">&#39;10&#39;</span><span class="p">)</span>
+<span class="go">10</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.AllInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">AllInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#AllInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.AllInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value did not pass all validators.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Any">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Any</tt><big>(</big><em>*validators</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Any"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Any" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use the first validated value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>msg</strong> &#8211; Message to deliver to user if validation fails.</li>
+<li><strong>kwargs</strong> &#8211; All other keyword arguments are passed to the sub-Schema constructors.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Return value of the first validator that passes.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Any</span><span class="p">(</span><span class="s">&#39;true&#39;</span><span class="p">,</span> <span class="s">&#39;false&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                      <span class="n">All</span><span class="p">(</span><span class="n">Any</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">),</span> <span class="n">Coerce</span><span class="p">(</span><span class="nb">bool</span><span class="p">))))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">(</span><span class="s">&#39;true&#39;</span><span class="p">)</span>
+<span class="go">&#39;true&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&quot;not a valid value&quot;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="s">&#39;moo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>msg argument is used</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Any</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&quot;Expected 1 2 or 3&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&quot;Expected 1 2 or 3&quot;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.AnyInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">AnyInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#AnyInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.AnyInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value did not pass any validator.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Boolean">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Boolean</tt><big>(</big><em>msg=None</em>, <em>clsoverride=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Boolean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Boolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert human-readable boolean values to a bool.</p>
+<p>Accepted values are 1, true, yes, on, enable, and their negatives.
+Non-string values are cast to bool.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Boolean</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">(</span><span class="s">&quot;0&quot;</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&quot;expected boolean&quot;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="s">&#39;moo&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span> <span class="n">validate</span><span class="p">(</span><span class="s">&#39;moo&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">BooleanInvalid</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.BooleanInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">BooleanInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#BooleanInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.BooleanInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value is not a boolean.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Capitalize">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Capitalize</tt><big>(</big><em>v</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Capitalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Capitalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Capitalise a string.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Capitalize</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">(</span><span class="s">&#39;hello world&#39;</span><span class="p">)</span>
+<span class="go">&#39;Hello world&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Clamp">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Clamp</tt><big>(</big><em>min=None</em>, <em>max=None</em>, <em>msg=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Clamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Clamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clamp a value to a range.</p>
+<p>Either min or max may be omitted.
+&gt;&gt;&gt; s = Schema(Clamp(min=0, max=1))
+&gt;&gt;&gt; s(0.5)
+0.5
+&gt;&gt;&gt; s(5)
+1
+&gt;&gt;&gt; s(-1)
+0</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Coerce">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Coerce</tt><big>(</big><em>type</em>, <em>msg=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Coerce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Coerce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coerce a value to a type.</p>
+<p>If the type constructor throws a ValueError or TypeError, the value
+will be marked as Invalid.</p>
+<p>Default behavior:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Coerce</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;expected int&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;expected int&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="s">&#39;foo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>With custom message:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Coerce</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="s">&quot;moo&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;moo&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="s">&#39;foo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.CoerceInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">CoerceInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#CoerceInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.CoerceInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Impossible to coerce value to type.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.DefaultTo">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">DefaultTo</tt><big>(</big><em>default_value</em>, <em>msg=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#DefaultTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.DefaultTo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets a value to default_value if none provided.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">DefaultTo</span><span class="p">(</span><span class="mi">42</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+<span class="go">42</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.DictInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">DictInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#DictInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.DictInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value found was not a dict.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.DirInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">DirInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#DirInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.DirInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value is not a directory.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.Error">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">Error</tt><a class="reference internal" href="_modules/voluptuous.html#Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base validation exception.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.ExactSequence">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">ExactSequence</tt><big>(</big><em>validators</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#ExactSequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.ExactSequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches each element in a sequence against the corresponding element in
+the validators.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>msg</strong> &#8211; Message to deliver to user if validation fails.</li>
+<li><strong>kwargs</strong> &#8211; All other keyword arguments are passed to the sub-Schema
+constructors.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">voluptuous</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">ExactSequence</span><span class="p">([</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">list</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">([</span><span class="s">&#39;hourly_report&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[]])</span>
+<span class="go">[&#39;hourly_report&#39;, 10, [], []]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="voluptuous.Exclusive">
+<em class="property">class </em><tt class="descclassname">voluptuous.</tt><tt class="descname">Exclusive</tt><big>(</big><em>schema</em>, <em>group_of_exclusion</em>, <em>msg=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Exclusive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Exclusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mark a node in the schema as exclusive.</p>
+<p>Exclusive keys inherited from Optional:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="n">Exclusive</span><span class="p">(</span><span class="s">&#39;alpha&#39;</span><span class="p">,</span> <span class="s">&#39;angles&#39;</span><span class="p">):</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Exclusive</span><span class="p">(</span><span class="s">&#39;beta&#39;</span><span class="p">,</span> <span class="s">&#39;angles&#39;</span><span class="p">):</span> <span class="nb">int</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span><span class="s">&#39;alpha&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">})</span>
+<span class="go">{&#39;alpha&#39;: 30}</span>
+</pre></div>
+</div>
+<p>Keys inside a same group of exclusion cannot be together, it only makes sense for dictionaries:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&quot;two or more values in the same group of exclusion &#39;angles&#39;&quot;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({</span><span class="s">&#39;alpha&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s">&#39;beta&#39;</span><span class="p">:</span> <span class="mi">45</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>For example, API can provides multiple types of authentication, but only one works in the same time:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;Please, use only one type of authentication at the same time.&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span>
+<span class="gp">... </span><span class="n">Exclusive</span><span class="p">(</span><span class="s">&#39;classic&#39;</span><span class="p">,</span> <span class="s">&#39;auth&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="n">msg</span><span class="p">):{</span>
+<span class="gp">... </span>    <span class="n">Required</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">):</span> <span class="nb">basestring</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">Required</span><span class="p">(</span><span class="s">&#39;password&#39;</span><span class="p">):</span> <span class="nb">basestring</span>
+<span class="gp">... </span>    <span class="p">},</span>
+<span class="gp">... </span><span class="n">Exclusive</span><span class="p">(</span><span class="s">&#39;internal&#39;</span><span class="p">,</span> <span class="s">&#39;auth&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="n">msg</span><span class="p">):{</span>
+<span class="gp">... </span>    <span class="n">Required</span><span class="p">(</span><span class="s">&#39;secret_key&#39;</span><span class="p">):</span> <span class="nb">basestring</span>
+<span class="gp">... </span>    <span class="p">},</span>
+<span class="gp">... </span><span class="n">Exclusive</span><span class="p">(</span><span class="s">&#39;social&#39;</span><span class="p">,</span> <span class="s">&#39;auth&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="n">msg</span><span class="p">):{</span>
+<span class="gp">... </span>    <span class="n">Required</span><span class="p">(</span><span class="s">&#39;social_network&#39;</span><span class="p">):</span> <span class="nb">basestring</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">Required</span><span class="p">(</span><span class="s">&#39;token&#39;</span><span class="p">):</span> <span class="nb">basestring</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span><span class="p">})</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&quot;Please, use only one type of authentication at the same time.&quot;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">schema</span><span class="p">({</span><span class="s">&#39;classic&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;email&#39;</span><span class="p">:</span> <span class="s">&#39;foo@example.com&#39;</span><span class="p">,</span> <span class="s">&#39;password&#39;</span><span class="p">:</span> <span class="s">&#39;bar&#39;</span><span class="p">},</span>
+<span class="gp">... </span>            <span class="s">&#39;social&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;social_network&#39;</span><span class="p">:</span> <span class="s">&#39;barfoo&#39;</span><span class="p">,</span> <span class="s">&#39;token&#39;</span><span class="p">:</span> <span class="s">&#39;tEMp&#39;</span><span class="p">}})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.ExclusiveInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">ExclusiveInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#ExclusiveInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.ExclusiveInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>More than one value found in exclusion group.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Extra">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Extra</tt><big>(</big><em>_</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Extra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Extra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allow keys in the data that are not present in the schema.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.FalseInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">FalseInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#FalseInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.FalseInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value is not False.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.FileInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">FileInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#FileInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.FileInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value is not a file.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.In">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">In</tt><big>(</big><em>container</em>, <em>msg=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#In"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.In" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate that a value is in a collection.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="voluptuous.Inclusive">
+<em class="property">class </em><tt class="descclassname">voluptuous.</tt><tt class="descname">Inclusive</tt><big>(</big><em>schema</em>, <em>group_of_inclusion</em>, <em>msg=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Inclusive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Inclusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mark a node in the schema as inclusive.</p>
+<p>Exclusive keys inherited from Optional:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span>
+<span class="gp">... </span>    <span class="n">Inclusive</span><span class="p">(</span><span class="s">&#39;filename&#39;</span><span class="p">,</span> <span class="s">&#39;file&#39;</span><span class="p">):</span> <span class="nb">str</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">Inclusive</span><span class="p">(</span><span class="s">&#39;mimetype&#39;</span><span class="p">,</span> <span class="s">&#39;file&#39;</span><span class="p">):</span> <span class="nb">str</span>
+<span class="gp">... </span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;filename&#39;</span><span class="p">:</span> <span class="s">&#39;dog.jpg&#39;</span><span class="p">,</span> <span class="s">&#39;mimetype&#39;</span><span class="p">:</span> <span class="s">&#39;image/jpeg&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">==</span> <span class="n">schema</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Keys inside a same group of inclusive must exist together, it only makes sense for dictionaries:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&quot;some but not all values in the same group of inclusion &#39;file&#39;&quot;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">schema</span><span class="p">({</span><span class="s">&#39;filename&#39;</span><span class="p">:</span> <span class="s">&#39;dog.jpg&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>If none of the keys in the group are present, it is accepted:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({})</span>
+<span class="go">{}</span>
+</pre></div>
+</div>
+<p>For example, API can return &#8216;height&#8217; and &#8216;width&#8217; together, but not separately.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;Height and width must exist together&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span>
+<span class="gp">... </span>    <span class="n">Inclusive</span><span class="p">(</span><span class="s">&#39;height&#39;</span><span class="p">,</span> <span class="s">&#39;size&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="n">msg</span><span class="p">):</span> <span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">Inclusive</span><span class="p">(</span><span class="s">&#39;width&#39;</span><span class="p">,</span> <span class="s">&#39;size&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="n">msg</span><span class="p">):</span> <span class="nb">int</span>
+<span class="gp">... </span><span class="p">})</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">schema</span><span class="p">({</span><span class="s">&#39;height&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">})</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">schema</span><span class="p">({</span><span class="s">&#39;width&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">})</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;height&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s">&#39;width&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">==</span> <span class="n">schema</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.InclusiveInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">InclusiveInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#InclusiveInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.InclusiveInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Not all values found in inclusion group.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.Invalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">Invalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Invalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Invalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The data was invalid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Attr msg:</th><td class="field-body">The error message.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Attr path:</th><td class="field-body">The path to the error, as a list of keys in the source data.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Attr error_message:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The actual error message that was raised, as a
+string.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.IsDir">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">IsDir</tt><big>(</big><em>msg=None</em>, <em>clsoverride=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#IsDir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.IsDir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify the directory exists.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">IsDir</span><span class="p">()(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+<span class="go">&#39;/&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.IsFalse">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">IsFalse</tt><big>(</big><em>msg=None</em>, <em>clsoverride=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#IsFalse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.IsFalse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assert that a value is false, in the Python sense.</p>
+<p>(see <a class="reference internal" href="#voluptuous.IsTrue" title="voluptuous.IsTrue"><tt class="xref py py-func docutils literal"><span class="pre">IsTrue()</span></tt></a> for more detail)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">IsFalse</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">([])</span>
+<span class="go">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&quot;value was not false&quot;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span> <span class="n">validate</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">FalseInvalid</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.IsFile">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">IsFile</tt><big>(</big><em>msg=None</em>, <em>clsoverride=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#IsFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.IsFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify the file exists.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">IsFile</span><span class="p">()(</span><span class="n">__file__</span><span class="p">))</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;voluptuous.py&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">FileInvalid</span><span class="p">,</span> <span class="s">&#39;not a file&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">IsFile</span><span class="p">()(</span><span class="s">&quot;random_filename_goes_here.py&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.IsTrue">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">IsTrue</tt><big>(</big><em>msg=None</em>, <em>clsoverride=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#IsTrue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.IsTrue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assert that a value is true, in the Python sense.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">IsTrue</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>&#8220;In the Python sense&#8221; means that implicitly false values, such as empty
+lists, dictionaries, etc. are treated as &#8220;false&#8221;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&quot;value was not true&quot;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">([])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">[1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&quot;value was not true&quot;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>...and so on.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span> <span class="n">validate</span><span class="p">([])</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">TrueInvalid</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Length">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Length</tt><big>(</big><em>min=None</em>, <em>max=None</em>, <em>msg=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Length" title="Permalink to this definition">¶</a></dt>
+<dd><p>The length of a value must be in a certain range.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.LiteralInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">LiteralInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#LiteralInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.LiteralInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The litteral values do not match.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Lower">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Lower</tt><big>(</big><em>v</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Lower"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Lower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform a string to lower case.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Lower</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">(</span><span class="s">&#39;HI&#39;</span><span class="p">)</span>
+<span class="go">&#39;hi&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="voluptuous.Marker">
+<em class="property">class </em><tt class="descclassname">voluptuous.</tt><tt class="descname">Marker</tt><big>(</big><em>schema</em>, <em>msg=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Marker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Marker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mark nodes for special treatment.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Match">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Match</tt><big>(</big><em>pattern</em>, <em>msg=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Match"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Match" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value must be a string that matches the regular expression.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Match</span><span class="p">(</span><span class="s">r&#39;^0x[A-F0-9]+$&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">(</span><span class="s">&#39;0x123EF4&#39;</span><span class="p">)</span>
+<span class="go">&#39;0x123EF4&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&quot;does not match regular expression&quot;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="s">&#39;123EF4&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;expected string or buffer&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Pattern may also be a _compiled regular expression:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Match</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;0x[A-F0-9]+&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">(</span><span class="s">&#39;0x123ef4&#39;</span><span class="p">)</span>
+<span class="go">&#39;0x123ef4&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.MatchInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">MatchInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#MatchInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.MatchInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value does not match the given regular expression.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Msg">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Msg</tt><big>(</big><em>schema</em>, <em>msg</em>, <em>cls=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Msg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report a user-friendly message if a schema fails to validate.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span>
+<span class="gp">... </span>  <span class="n">Msg</span><span class="p">([</span><span class="s">&#39;one&#39;</span><span class="p">,</span> <span class="s">&#39;two&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+<span class="gp">... </span>      <span class="s">&#39;should be one of &quot;one&quot;, &quot;two&quot; or an integer&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;should be one of &quot;one&quot;, &quot;two&quot; or an integer&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">([</span><span class="s">&#39;three&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Messages are only applied to invalid direct descendants of the schema:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Msg</span><span class="p">([[</span><span class="s">&#39;one&#39;</span><span class="p">,</span> <span class="s">&#39;two&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="s">&#39;not okay!&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;invalid list value @ data[0][0]&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">([[</span><span class="s">&#39;three&#39;</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>The type which is thrown can be overridden but needs to be a subclass of Invalid</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">SchemaError</span><span class="p">,</span> <span class="s">&#39;Msg can only use subclases of Invalid as custom class&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Msg</span><span class="p">([</span><span class="nb">int</span><span class="p">],</span> <span class="s">&#39;should be int&#39;</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="ne">KeyError</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>If you do use a subclass of Invalid, that error will be thrown (wrapped in a MultipleInvalid)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Msg</span><span class="p">([[</span><span class="s">&#39;one&#39;</span><span class="p">,</span> <span class="s">&#39;two&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="s">&#39;not okay!&#39;</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">RangeInvalid</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span> <span class="n">validate</span><span class="p">([</span><span class="s">&#39;three&#39;</span><span class="p">])</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">RangeInvalid</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="voluptuous.Object">
+<em class="property">class </em><tt class="descclassname">voluptuous.</tt><tt class="descname">Object</tt><big>(</big><em>schema</em>, <em>cls=...</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate that we should work with attributes, not keys.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.ObjectInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">ObjectInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#ObjectInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.ObjectInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value we found was not an object.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="voluptuous.Optional">
+<em class="property">class </em><tt class="descclassname">voluptuous.</tt><tt class="descname">Optional</tt><big>(</big><em>schema</em>, <em>msg=None</em>, <em>default=...</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Optional"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Optional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mark a node in the schema as optional, and optionally provide a default</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="n">Optional</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">):</span> <span class="nb">str</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({})</span>
+<span class="go">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="n">Optional</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;value&#39;</span><span class="p">):</span> <span class="nb">str</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({})</span>
+<span class="go">{&#39;key&#39;: &#39;value&#39;}</span>
+</pre></div>
+</div>
+<p>If &#8216;required&#8217; flag is set for an entire schema, optional keys aren&#8217;t required</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span>
+<span class="gp">... </span>   <span class="n">Optional</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">):</span> <span class="nb">str</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="s">&#39;key2&#39;</span><span class="p">:</span> <span class="nb">str</span>
+<span class="gp">... </span><span class="p">},</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span><span class="s">&#39;key2&#39;</span><span class="p">:</span><span class="s">&#39;value&#39;</span><span class="p">})</span>
+<span class="go">{&#39;key2&#39;: &#39;value&#39;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.PathExists">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">PathExists</tt><big>(</big><em>msg=None</em>, <em>clsoverride=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#PathExists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.PathExists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify the path exists, regardless of its type.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">PathExists</span><span class="p">()(</span><span class="n">__file__</span><span class="p">))</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;voluptuous.py&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">Invalid</span><span class="p">,</span> <span class="s">&#39;path does not exist&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">PathExists</span><span class="p">()(</span><span class="s">&quot;random_filename_goes_here.py&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.PathInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">PathInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#PathInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.PathInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value is not a path.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Range">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Range</tt><big>(</big><em>min=None</em>, <em>max=None</em>, <em>min_included=True</em>, <em>max_included=True</em>, <em>msg=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Limit a value to a range.</p>
+<p>Either min or max may be omitted.
+Either min or max can be excluded from the range of accepted values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises Invalid:</th><td class="field-body">If the value is outside the range.</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Range</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">min_included</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;value must be at most 10&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">s</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;value must be higher than 1&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">s</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;value must be lower than 10&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">Schema</span><span class="p">(</span><span class="n">Range</span><span class="p">(</span><span class="nb">max</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_included</span><span class="o">=</span><span class="bp">False</span><span class="p">))(</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.RangeInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">RangeInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#RangeInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.RangeInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value is not in given range.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="voluptuous.Remove">
+<em class="property">class </em><tt class="descclassname">voluptuous.</tt><tt class="descname">Remove</tt><big>(</big><em>schema</em>, <em>msg=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mark a node in the schema to be removed and excluded from the validated
+output. Keys that fail validation will not raise <tt class="docutils literal"><span class="pre">Invalid</span></tt>. Instead, these
+keys will be treated as extras.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="nb">str</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Remove</span><span class="p">(</span><span class="nb">int</span><span class="p">):</span> <span class="nb">str</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&quot;extra keys not allowed @ data[1]&quot;</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">schema</span><span class="p">({</span><span class="s">&#39;keep&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="s">&#39;red&#39;</span><span class="p">,</span> <span class="s">&#39;red&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s">&#39;green&#39;</span><span class="p">})</span>
+<span class="go">{&#39;red&#39;: 1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">([</span><span class="nb">int</span><span class="p">,</span> <span class="n">Remove</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">Extra</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">,</span> <span class="s">&#39;7&#39;</span><span class="p">])</span>
+<span class="go">[1, 2, 3, 5, &#39;7&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Replace">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Replace</tt><big>(</big><em>pattern</em>, <em>substitution</em>, <em>msg=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Regex substitution.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">All</span><span class="p">(</span><span class="n">Replace</span><span class="p">(</span><span class="s">&#39;you&#39;</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                      <span class="n">Replace</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">,</span> <span class="s">&#39;goodbye&#39;</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">(</span><span class="s">&#39;you say hello&#39;</span><span class="p">)</span>
+<span class="go">&#39;I say goodbye&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="voluptuous.Required">
+<em class="property">class </em><tt class="descclassname">voluptuous.</tt><tt class="descname">Required</tt><big>(</big><em>schema</em>, <em>msg=None</em>, <em>default=...</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Required"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Required" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mark a node in the schema as being required, and optionally provide a default value.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="n">Required</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">):</span> <span class="nb">str</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&quot;required key not provided @ data[&#39;key&#39;]&quot;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({})</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="n">Required</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;value&#39;</span><span class="p">):</span> <span class="nb">str</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({})</span>
+<span class="go">{&#39;key&#39;: &#39;value&#39;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.RequiredFieldInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">RequiredFieldInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#RequiredFieldInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.RequiredFieldInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required field was missing.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.ScalarInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">ScalarInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#ScalarInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.ScalarInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scalars did not match.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="voluptuous.Schema">
+<em class="property">class </em><tt class="descclassname">voluptuous.</tt><tt class="descname">Schema</tt><big>(</big><em>schema</em>, <em>required=False</em>, <em>extra=0</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Schema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>A validation schema.</p>
+<p>The schema is a Python tree-like structure where nodes are pattern
+matched against corresponding trees of values.</p>
+<p>Nodes can be values, in which case a direct comparison is used, types,
+in which case an isinstance() check is performed, or callables, which will
+validate and optionally convert the value.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.SchemaError">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">SchemaError</tt><a class="reference internal" href="_modules/voluptuous.html#SchemaError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.SchemaError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An error was encountered in the schema.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.SequenceItemInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">SequenceItemInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#SequenceItemInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.SequenceItemInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>One of the values found in a sequence was invalid.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.SequenceTypeInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">SequenceTypeInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#SequenceTypeInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.SequenceTypeInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The type found is not a sequence type.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Title">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Title</tt><big>(</big><em>v</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Title case a string.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Title</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">(</span><span class="s">&#39;hello world&#39;</span><span class="p">)</span>
+<span class="go">&#39;Hello World&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.TrueInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">TrueInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#TrueInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.TrueInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value is not True.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.TypeInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">TypeInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#TypeInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.TypeInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value was not of required type.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Upper">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Upper</tt><big>(</big><em>v</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Upper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Upper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform a string to upper case.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Upper</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">(</span><span class="s">&#39;hi&#39;</span><span class="p">)</span>
+<span class="go">&#39;HI&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.Url">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">Url</tt><big>(</big><em>msg=None</em>, <em>clsoverride=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#Url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.Url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify that the value is a URL.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Url</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;expected a URL&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">s</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">(</span><span class="s">&#39;http://w3.org&#39;</span><span class="p">)</span>
+<span class="go">&#39;http://w3.org&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.UrlInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">UrlInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#UrlInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.UrlInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value is not a url.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="voluptuous.ValueInvalid">
+<em class="property">exception </em><tt class="descclassname">voluptuous.</tt><tt class="descname">ValueInvalid</tt><big>(</big><em>message</em>, <em>path=None</em>, <em>error_message=None</em>, <em>error_type=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#ValueInvalid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.ValueInvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value was found invalid by evaluation function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.extra">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">extra</tt><big>(</big><em>_</em><big>)</big><a class="headerlink" href="#voluptuous.extra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allow keys in the data that are not present in the schema.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.message">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">message</tt><big>(</big><em>default=None</em>, <em>cls=None</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience decorator to allow functions to provide a message.</p>
+<p>Set a default message:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nd">@message</span><span class="p">(</span><span class="s">&#39;not an integer&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">isint</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">isint</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;not an integer&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The message can be overridden on a per validator basis:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">isint</span><span class="p">(</span><span class="s">&#39;bad&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;bad&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The class thrown too:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">IntegerInvalid</span><span class="p">(</span><span class="n">Invalid</span><span class="p">):</span> <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">isint</span><span class="p">(</span><span class="s">&#39;bad&#39;</span><span class="p">,</span> <span class="n">clsoverride</span><span class="o">=</span><span class="n">IntegerInvalid</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span> <span class="n">validate</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">IntegerInvalid</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="voluptuous.truth">
+<tt class="descclassname">voluptuous.</tt><tt class="descname">truth</tt><big>(</big><em>f</em><big>)</big><a class="reference internal" href="_modules/voluptuous.html#truth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#voluptuous.truth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience decorator to convert truth functions into validators.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nd">@truth</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">isdir</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">isdir</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+<span class="go">&#39;/&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="n">MultipleInvalid</span><span class="p">,</span> <span class="s">&#39;not a valid value&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">validate</span><span class="p">(</span><span class="s">&#39;/notavaliddir&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/reference.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Voluptuous 0.8.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Alec Thomas.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

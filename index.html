@@ -1,0 +1,566 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Voluptuous is a Python data validation library &mdash; Voluptuous 0.8.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.8.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Voluptuous 0.8.6 documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">Voluptuous 0.8.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="voluptuous-is-a-python-data-validation-library">
+<h1>Voluptuous is a Python data validation library<a class="headerlink" href="#voluptuous-is-a-python-data-validation-library" title="Permalink to this headline">¶</a></h1>
+<a class="reference external image-reference" href="https://travis-ci.org/alecthomas/voluptuous"><img alt="Build Status" src="https://travis-ci.org/alecthomas/voluptuous.png" /></a>
+<a class="reference external image-reference" href="https://waffle.io/alecthomas/voluptuous"><img alt="Stories in Ready" src="https://badge.waffle.io/alecthomas/voluptuous.png?label=ready&amp;title=Ready" /></a>
+<p>Voluptuous, <em>despite</em> the name, is a Python data validation library. It is
+primarily intended for validating data coming into Python as JSON, YAML, etc.</p>
+<p>It has three goals:</p>
+<ol class="arabic simple">
+<li>Simplicity.</li>
+<li>Support for complex data structures.</li>
+<li>Provide useful error messages.</li>
+</ol>
+<div class="section" id="contact">
+<h2>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h2>
+<p>Voluptuous now has a mailing list! Send a mail to <a class="reference external" href="mailto:voluptuous&#37;&#52;&#48;librelist&#46;com">voluptuous<span>&#64;</span>librelist<span>&#46;</span>com</a>
+to subscribe. Instructions will follow.</p>
+<p>You can also contact me directly via <a class="reference external" href="mailto:alec&#37;&#52;&#48;swapoff&#46;org">email</a> or
+<a class="reference external" href="https://twitter.com/alecthomas">Twitter</a>.</p>
+<p>To file a bug, create a
+<a class="reference external" href="https://github.com/alecthomas/voluptuous/issues/new">new issue</a>
+on GitHub with a short example of how to replicate the issue.</p>
+</div>
+<div class="section" id="show-me-an-example">
+<h2>Show me an example<a class="headerlink" href="#show-me-an-example" title="Permalink to this headline">¶</a></h2>
+<p>Twitter&#8217;s <a class="reference external" href="https://dev.twitter.com/docs/api/1/get/users/search">user search API</a> accepts query URLs
+like:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ curl &#39;http://api.twitter.com/1/users/search.json?q=python&amp;per_page=20&amp;page=1
+</pre></div>
+</div>
+<p>To validate this we might use a schema like:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">voluptuous</span> <span class="kn">import</span> <span class="n">Schema</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span>
+<span class="gp">... </span>  <span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="gp">... </span>  <span class="s">&#39;per_page&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span>  <span class="s">&#39;page&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">})</span>
+</pre></div>
+</div>
+<p>This schema very succinctly and roughly describes the data required by
+the API, and will work fine. But it has a few problems. Firstly, it
+doesn&#8217;t fully express the constraints of the API. According to the API,
+<tt class="docutils literal"><span class="pre">per_page</span></tt> should be restricted to at most 20, defaulting to 5, for
+example. To describe the semantics of the API more accurately, our
+schema will need to be more thoroughly defined:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">voluptuous</span> <span class="kn">import</span> <span class="n">Required</span><span class="p">,</span> <span class="n">All</span><span class="p">,</span> <span class="n">Length</span><span class="p">,</span> <span class="n">Range</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span>
+<span class="gp">... </span>  <span class="n">Required</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">):</span> <span class="n">All</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Length</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span>
+<span class="gp">... </span>  <span class="n">Required</span><span class="p">(</span><span class="s">&#39;per_page&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span> <span class="n">All</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">20</span><span class="p">)),</span>
+<span class="gp">... </span>  <span class="s">&#39;page&#39;</span><span class="p">:</span> <span class="n">All</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+<span class="gp">... </span><span class="p">})</span>
+</pre></div>
+</div>
+<p>This schema fully enforces the interface defined in Twitter&#8217;s
+documentation, and goes a little further for completeness.</p>
+<p>&#8220;q&#8221; is required:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">voluptuous</span> <span class="kn">import</span> <span class="n">MultipleInvalid</span><span class="p">,</span> <span class="n">Invalid</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({})</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;required key not provided @ data[&#39;q&#39;]&quot;</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>...must be a string:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({</span><span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="mi">123</span><span class="p">})</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;expected str for dictionary value @ data[&#39;q&#39;]&quot;</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>...and must be at least one character in length:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({</span><span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">})</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;length of value must be at least 1 for dictionary value @ data[&#39;q&#39;]&quot;</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span><span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="s">&#39;#topic&#39;</span><span class="p">})</span> <span class="o">==</span> <span class="p">{</span><span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="s">&#39;#topic&#39;</span><span class="p">,</span> <span class="s">&#39;per_page&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">per_page</span></tt> is a positive integer no greater than 20:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({</span><span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="s">&#39;#topic&#39;</span><span class="p">,</span> <span class="s">&#39;per_page&#39;</span><span class="p">:</span> <span class="mi">900</span><span class="p">})</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;value must be at most 20 for dictionary value @ data[&#39;per_page&#39;]&quot;</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({</span><span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="s">&#39;#topic&#39;</span><span class="p">,</span> <span class="s">&#39;per_page&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">10</span><span class="p">})</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;value must be at least 1 for dictionary value @ data[&#39;per_page&#39;]&quot;</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">page</span></tt> is an integer <tt class="docutils literal"><span class="pre">&gt;=</span> <span class="pre">0</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({</span><span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="s">&#39;#topic&#39;</span><span class="p">,</span> <span class="s">&#39;per_page&#39;</span><span class="p">:</span> <span class="s">&#39;one&#39;</span><span class="p">})</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+<span class="go">&quot;expected int for dictionary value @ data[&#39;per_page&#39;]&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span><span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="s">&#39;#topic&#39;</span><span class="p">,</span> <span class="s">&#39;page&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span> <span class="o">==</span> <span class="p">{</span><span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="s">&#39;#topic&#39;</span><span class="p">,</span> <span class="s">&#39;page&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;per_page&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="defining-schemas">
+<h2>Defining schemas<a class="headerlink" href="#defining-schemas" title="Permalink to this headline">¶</a></h2>
+<p>Schemas are nested data structures consisting of dictionaries, lists,
+scalars and <em>validators</em>. Each node in the input schema is pattern
+matched against corresponding nodes in the input data.</p>
+<div class="section" id="literals">
+<h3>Literals<a class="headerlink" href="#literals" title="Permalink to this headline">¶</a></h3>
+<p>Literals in the schema are matched using normal equality checks:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="s">&#39;a string&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">(</span><span class="s">&#39;a string&#39;</span><span class="p">)</span>
+<span class="go">&#39;a string&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="types">
+<h3>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h3>
+<p>Types in the schema are matched by checking if the corresponding value
+is an instance of the type:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">(</span><span class="s">&#39;one&#39;</span><span class="p">)</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;expected int&quot;</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="lists">
+<h3>Lists<a class="headerlink" href="#lists" title="Permalink to this headline">¶</a></h3>
+<p>Lists in the schema are treated as a set of valid values. Each element
+in the schema list is compared to each value in the input data:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">[1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">[1, 1, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">([</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;string&#39;</span><span class="p">])</span>
+<span class="go">[&#39;a&#39;, 1, &#39;string&#39;, 1, &#39;string&#39;]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="validation-functions">
+<h3>Validation functions<a class="headerlink" href="#validation-functions" title="Permalink to this headline">¶</a></h3>
+<p>Validators are simple callables that raise an <tt class="docutils literal"><span class="pre">Invalid</span></tt> exception when
+they encounter invalid data. The criteria for determining validity is
+entirely up to the implementation; it may check that a value is a valid
+username with <tt class="docutils literal"><span class="pre">pwd.getpwnam()</span></tt>, it may check that a value is of a
+specific type, and so on.</p>
+<p>The simplest kind of validator is a Python function that raises
+ValueError when its argument is invalid. Conveniently, many builtin
+Python functions have this property. Here&#8217;s an example of a date
+validator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">Date</span><span class="p">(</span><span class="n">fmt</span><span class="o">=</span><span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="k">return</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">fmt</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Date</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">(</span><span class="s">&#39;2013-03-03&#39;</span><span class="p">)</span>
+<span class="go">datetime.datetime(2013, 3, 3, 0, 0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">(</span><span class="s">&#39;2013-03&#39;</span><span class="p">)</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;not a valid value&quot;</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>In addition to simply determining if a value is valid, validators may
+mutate the value into a valid form. An example of this is the
+<tt class="docutils literal"><span class="pre">Coerce(type)</span></tt> function, which returns a function that coerces its
+argument to the given type:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">Coerce</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Coerce a value to a type.</span>
+
+<span class="sd">    If the type constructor throws a ValueError, the value will be marked as</span>
+<span class="sd">    Invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Invalid</span><span class="p">(</span><span class="n">msg</span> <span class="ow">or</span> <span class="p">(</span><span class="s">&#39;expected </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">type</span><span class="o">.</span><span class="n">__name__</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">f</span>
+</pre></div>
+</div>
+<p>This example also shows a common idiom where an optional human-readable
+message can be provided. This can vastly improve the usefulness of the
+resulting error messages.</p>
+</div>
+<div class="section" id="dictionaries">
+<h3>Dictionaries<a class="headerlink" href="#dictionaries" title="Permalink to this headline">¶</a></h3>
+<p>Each key-value pair in a schema dictionary is validated against each
+key-value pair in the corresponding data dictionary:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="s">&#39;one&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s">&#39;two&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="s">&#39;one&#39;</span><span class="p">})</span>
+<span class="go">{1: &#39;one&#39;}</span>
+</pre></div>
+</div>
+<div class="section" id="extra-dictionary-keys">
+<h4>Extra dictionary keys<a class="headerlink" href="#extra-dictionary-keys" title="Permalink to this headline">¶</a></h4>
+<p>By default any additional keys in the data, not in the schema will
+trigger exceptions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="mi">2</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;extra keys not allowed @ data[1]&quot;</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>This behaviour can be altered on a per-schema basis with
+<tt class="docutils literal"><span class="pre">Schema(...,</span> <span class="pre">extra=True)</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="mi">2</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span> <span class="n">extra</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+<span class="go">{1: 2, 2: 3}</span>
+</pre></div>
+</div>
+<p>It can also be overridden per-dictionary by using the catch-all marker
+token <tt class="docutils literal"><span class="pre">extra</span></tt> as a key:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">voluptuous</span> <span class="kn">import</span> <span class="n">Extra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="p">{</span><span class="n">Extra</span><span class="p">:</span> <span class="nb">object</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span> <span class="s">&#39;bar&#39;</span><span class="p">}})</span>
+<span class="go">{1: {&#39;foo&#39;: &#39;bar&#39;}}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="required-dictionary-keys">
+<h4>Required dictionary keys<a class="headerlink" href="#required-dictionary-keys" title="Permalink to this headline">¶</a></h4>
+<p>By default, keys in the schema are not required to be in the data:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="mi">4</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span><span class="mi">3</span><span class="p">:</span> <span class="mi">4</span><span class="p">})</span>
+<span class="go">{3: 4}</span>
+</pre></div>
+</div>
+<p>Similarly to how <tt class="docutils literal"><span class="pre">extra_</span></tt> keys work, this behaviour can be overridden
+per-schema:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({</span><span class="mi">3</span><span class="p">:</span> <span class="mi">4</span><span class="p">})</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;required key not provided @ data[1]&quot;</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>And per-key, with the marker token <tt class="docutils literal"><span class="pre">Required(key)</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="n">Required</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="mi">4</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({</span><span class="mi">3</span><span class="p">:</span> <span class="mi">4</span><span class="p">})</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;required key not provided @ data[1]&quot;</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="go">{1: 2}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="optional-dictionary-keys">
+<h4>Optional dictionary keys<a class="headerlink" href="#optional-dictionary-keys" title="Permalink to this headline">¶</a></h4>
+<p>If a schema has <tt class="docutils literal"><span class="pre">required=True</span></tt>, keys may be individually marked as
+optional using the marker token <tt class="docutils literal"><span class="pre">Optional(key)</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">voluptuous</span> <span class="kn">import</span> <span class="n">Optional</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="n">Optional</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="mi">4</span><span class="p">},</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({})</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;required key not provided @ data[1]&quot;</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="go">{1: 2}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="mi">5</span><span class="p">})</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;extra keys not allowed @ data[4]&quot;</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="mi">4</span><span class="p">})</span>
+<span class="go">{1: 2, 3: 4}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="objects">
+<h3>Objects<a class="headerlink" href="#objects" title="Permalink to this headline">¶</a></h3>
+<p>Each key-value pair in a schema dictionary is validated against each
+attribute-value pair in the corresponding object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">voluptuous</span> <span class="kn">import</span> <span class="n">Object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Structure</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">=</span> <span class="n">q</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="s">&#39;&lt;Structure(q={0.q!r})&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">(</span><span class="n">Object</span><span class="p">({</span><span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="s">&#39;one&#39;</span><span class="p">},</span> <span class="n">cls</span><span class="o">=</span><span class="n">Structure</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">(</span><span class="n">Structure</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="s">&#39;one&#39;</span><span class="p">))</span>
+<span class="go">&lt;Structure(q=&#39;one&#39;)&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="error-reporting">
+<h3>Error reporting<a class="headerlink" href="#error-reporting" title="Permalink to this headline">¶</a></h3>
+<p>Validators must throw an <tt class="docutils literal"><span class="pre">Invalid</span></tt> exception if invalid data is passed
+to them. All other exceptions are treated as errors in the validator and
+will not be caught.</p>
+<p>Each <tt class="docutils literal"><span class="pre">Invalid</span></tt> exception has an associated <tt class="docutils literal"><span class="pre">path</span></tt> attribute representing
+the path in the data structure to our currently validating value, as well
+as an <tt class="docutils literal"><span class="pre">error_message</span></tt> attribute that contains the message of the original
+exception. This is especially useful when you want to catch <tt class="docutils literal"><span class="pre">Invalid</span></tt>
+exceptions and give some feedback to the user, for instance in the context of
+an HTTP API.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">validate_email</span><span class="p">(</span><span class="n">email</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="sd">&quot;&quot;&quot;Validate email.&quot;&quot;&quot;</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="ow">not</span> <span class="s">&quot;@&quot;</span> <span class="ow">in</span> <span class="n">email</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="k">raise</span> <span class="n">Invalid</span><span class="p">(</span><span class="s">&quot;This email is invalid.&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">email</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">({</span><span class="s">&quot;email&quot;</span><span class="p">:</span> <span class="n">validate_email</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exc</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">schema</span><span class="p">({</span><span class="s">&quot;email&quot;</span><span class="p">:</span> <span class="s">&quot;whatever&quot;</span><span class="p">})</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+<span class="go">&quot;This email is invalid. for dictionary value @ data[&#39;email&#39;]&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exc</span><span class="o">.</span><span class="n">path</span>
+<span class="go">[&#39;email&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exc</span><span class="o">.</span><span class="n">msg</span>
+<span class="go">&#39;This email is invalid.&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exc</span><span class="o">.</span><span class="n">error_message</span>
+<span class="go">&#39;This email is invalid.&#39;</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">path</span></tt> attribute is used during error reporting, but also during matching
+to determine whether an error should be reported to the user or if the next
+match should be attempted. This is determined by comparing the depth of the
+path where the check is, to the depth of the path where the error occurred. If
+the error is more than one level deeper, it is reported.</p>
+<p>The upshot of this is that <em>matching is depth-first and fail-fast</em>.</p>
+<p>To illustrate this, here is an example schema:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">([[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="mi">6</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Each value in the top-level list is matched depth-first in-order. Given
+input data of <tt class="docutils literal"><span class="pre">[[6]]</span></tt>, the inner list will match the first element of
+the schema, but the literal <tt class="docutils literal"><span class="pre">6</span></tt> will not match any of the elements of
+that list. This error will be reported back to the user immediately. No
+backtracking is attempted:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">schema</span><span class="p">([[</span><span class="mi">6</span><span class="p">]])</span>
+<span class="gp">... </span>  <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s">&#39;MultipleInvalid not raised&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MultipleInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;invalid list value @ data[0][0]&quot;</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>If we pass the data <tt class="docutils literal"><span class="pre">[6]</span></tt>, the <tt class="docutils literal"><span class="pre">6</span></tt> is not a list type and so will not
+recurse into the first element of the schema. Matching will continue on
+to the second element in the schema, and succeed:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="p">([</span><span class="mi">6</span><span class="p">])</span>
+<span class="go">[6]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-tests">
+<h3>Running tests.<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h3>
+<p>Voluptuous is using nosetests:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ nosetests
+</pre></div>
+</div>
+</div>
+<div class="section" id="why-use-voluptuous-over-another-validation-library">
+<h3>Why use Voluptuous over another validation library?<a class="headerlink" href="#why-use-voluptuous-over-another-validation-library" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Validators are simple callables.</dt>
+<dd>No need to subclass anything, just use a function.</dd>
+<dt>Errors are simple exceptions.</dt>
+<dd>A validator can just <tt class="docutils literal"><span class="pre">raise</span> <span class="pre">Invalid(msg)</span></tt> and expect the user to get useful
+messages.</dd>
+<dt>Schemas are basic Python data structures.</dt>
+<dd>Should your data be a dictionary of integer keys to strings? <tt class="docutils literal"><span class="pre">{int:</span> <span class="pre">str}</span></tt>
+does what you expect. List of integers, floats or strings? <tt class="docutils literal"><span class="pre">[int,</span> <span class="pre">float,</span>
+<span class="pre">str]</span></tt>.</dd>
+<dt>Designed from the ground up for validating more than just forms.</dt>
+<dd>Nested data structures are treated in the same way as any other type. Need
+a list of dictionaries? <tt class="docutils literal"><span class="pre">[{}]</span></tt></dd>
+<dt>Consistency.</dt>
+<dd>Types in the schema are checked as types. Values are compared as values.
+Callables are called to validate. Simple.</dd>
+</dl>
+</div>
+<div class="section" id="other-libraries-and-inspirations">
+<h3>Other libraries and inspirations<a class="headerlink" href="#other-libraries-and-inspirations" title="Permalink to this headline">¶</a></h3>
+<p>Voluptuous is heavily inspired by
+<a class="reference external" href="http://code.google.com/p/validino/">Validino</a>, and to a lesser extent,
+<a class="reference external" href="http://code.google.com/p/jsonvalidator/">jsonvalidator</a> and
+<a class="reference external" href="http://blog.sendapatch.se/category/json_schema.html">json_schema</a>.</p>
+<p>I greatly prefer the light-weight style promoted by these libraries to
+the complexity of libraries like FormEncode.</p>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Voluptuous is a Python data validation library</a><ul>
+<li><a class="reference internal" href="#contact">Contact</a></li>
+<li><a class="reference internal" href="#show-me-an-example">Show me an example</a></li>
+<li><a class="reference internal" href="#defining-schemas">Defining schemas</a><ul>
+<li><a class="reference internal" href="#literals">Literals</a></li>
+<li><a class="reference internal" href="#types">Types</a></li>
+<li><a class="reference internal" href="#lists">Lists</a></li>
+<li><a class="reference internal" href="#validation-functions">Validation functions</a></li>
+<li><a class="reference internal" href="#dictionaries">Dictionaries</a><ul>
+<li><a class="reference internal" href="#extra-dictionary-keys">Extra dictionary keys</a></li>
+<li><a class="reference internal" href="#required-dictionary-keys">Required dictionary keys</a></li>
+<li><a class="reference internal" href="#optional-dictionary-keys">Optional dictionary keys</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#objects">Objects</a></li>
+<li><a class="reference internal" href="#error-reporting">Error reporting</a></li>
+<li><a class="reference internal" href="#running-tests">Running tests.</a></li>
+<li><a class="reference internal" href="#why-use-voluptuous-over-another-validation-library">Why use Voluptuous over another validation library?</a></li>
+<li><a class="reference internal" href="#other-libraries-and-inspirations">Other libraries and inspirations</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">Voluptuous 0.8.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Alec Thomas.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
